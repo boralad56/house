@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>  
+    <script src="http://d23cj0cdvyoxg0.cloudfront.net/xivelyjs-1.0.4.min.js"></script>  
+    <script type="text/javascript" src="index.js"></script>
+    <link href='http://fonts.googleapis.com/css?family=Josefin+Slab:100,300,400,600,700,600italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Oswald:300,400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Tangerine">
+
+    <link rel="stylesheet" type="text/css" href="index.css">
+
+    <title>autoHaus</title>
+  </head>
+
+  <body>
+    <header>
+      <div id="logo">auto<strong>Haus</strong></div>
+    </header>
+    <div id="line">
+    </div>
+    
+    <div id="wunderground">
+      <ul>
+        <li id="uv">UV:</li>
+        <li id="weather">Weather:</li>
+        <li id="temp">Temp:</li>
+        <li id="hum">Humidity:</li>
+      </ul>
+    </div>
+  
+    <p>
+      <div class="sensordata left">
+        <h1>Kitchen</h1>
+        <div class="temperature" id="t1"></div>
+        <div class="humidity" id="h1"></div>
+      </div>
+
+      <div class="sensordata left">
+        <h1>Dining Room</h1>
+        <div class="temperature" id="t2"></div>
+        <div class="humidity" id="h2"></div>
+      </div>
+
+      <div class="sensordata left">
+        <h1>Living Room</h1>
+        <div class="temperature" id="t3"></div>
+        <div class="humidity" id="h3"></div>
+      </div>
+
+      <div class="sensordata left">
+        <h1>BR1</h1>
+        <div class="temperature" id="t4"></div>
+        <div class="humidity" id="h4"></div>
+      </div>
+
+      <div class="sensordata left">
+        <h1>BR2</h1>
+        <div class="temperature" id="t5"></div>
+        <div class="humidity" id="h5"></div>
+      </div>
+
+      <div class="sensordata left">
+        <h1>BR3</h1>
+        <div class="temperature" id="t6"></div>
+        <div class="humidity" id="h6"></div>
+      </div>
+
+      <div class="sensordata left">
+        <h1>Basement</h1>
+        <div class="temperature" id="t7"></div>
+        <div class="humidity" id="h7"></div>
+      </div>
+      <br style="clear: left;" />
+    </p>
+  
+    <footer>
+      <div id="footermenu">Crafted with love by <strong><a href="http://jacobjthomas.com">Jacob Thomas</a></strong></div>
+    </footer>
+  </body>
+
+</html>
