@@ -15,12 +15,22 @@ import xively
 
 global xively_success
 global csv_success 
+global wuLastUpdate
+global wuData
+
 xively_success = False
 csv_success = False
 
+wuLastUpdate = datetime.datetime.strptime("", "")
+wuData =[]
 
 
+
+## This is the first getWunderground() function- doesn't include Wunderground API timer of 
+## 1 time per 30 min
+"""
 def getWunderground():
+  global wuLastUpdate
   dataFromWunderground = []
   try:
     #f = urllib2.urlopen('http://api.wunderground.com/api/a1ab3a70a8e9f35e/geolookup/conditions/q/ME/Orrington.json')
@@ -39,6 +49,40 @@ def getWunderground():
     for i in range(0,4):
       dataFromWunderground.append("No connection")
   return dataFromWunderground
+"""
+
+def getWunderground():
+  dataFromWunderground = []
+  global wuLastUpdate
+  global wuData
+
+  timeDelta = datetime.datetime.now()-wuLastUpdate
+  print timeDelta
+  if timeDelta >= datetime.timedelta(minutes=30):
+    try:
+      f = urllib2.urlopen('http://api.wunderground.com/api/a1ab3a70a8e9f35e/geolookup/conditions/q/ME/Orrington.json')
+      json_string = f.read()
+      parsed_json = json.loads(json_string)
+      weather = parsed_json["current_observation"]["weather"]
+      temp_f = parsed_json["current_observation"]["temp_f"]
+      relative_humidity = parsed_json["current_observation"]["relative_humidity"]
+      uv = parsed_json["current_observation"]["UV"]
+      #pressure_in = parsed_json["current_observation"]["pressure_in"]
+      #wind_degrees = parsed_json["current_observation"]["wind_degrees"]
+      #wind_mph = parsed_json["current_observation"]["wind_mph"]
+      f.close()
+      dataFromWunderground = [str(weather), str(uv), str(temp_f), str(relative_humidity[:-1]) ]
+      wuData = dataFromWunderground
+      wuLastUpdate = datetime.datetime.now()
+    except:
+      for i in range(0,4):
+        dataFromWunderground.append("No connection")
+      wuData = dataFromWunderground
+      wuLastUpdate = datetime.datetime.now()
+  else:
+    dataFromWunderground = wuData
+  return dataFromWunderground
+
 
 def getDateTime():
   timeNow = time.strftime("%H:%M:%S")
@@ -63,14 +107,14 @@ def printXively(dataList):
   feed = api.feeds.get(XIVELY_FEED_ID)
   now = datetime.datetime.now()
   feed.datastreams = [
-    #xively.Datastream(id="uv", current_value=dataList[3], at=now),
-    #xively.Datastream(id="weather", current_value=dataList[2], at=now),
-    #xively.Datastream(id="exterior_temp", current_value=dataList[4], at=now),
-    #xively.Datastream(id="exterior_humidity", current_value=dataList[5], at=now),
-    #xively.Datastream(id="temp1", current_value=dataList[6][0], at=now),
-    #xively.Datastream(id="humidity1", current_value=dataList[6][1], at=now),
-    #xively.Datastream(id="temp2", current_value=dataList[7][0], at=now),
-    #xively.Datastream(id="humidity2", current_value=dataList[7][1], at=now),
+    xively.Datastream(id="uv", current_value=dataList[3], at=now),
+    xively.Datastream(id="weather", current_value=dataList[2], at=now),
+    xively.Datastream(id="exterior_temp", current_value=dataList[4], at=now),
+    xively.Datastream(id="exterior_humidity", current_value=dataList[5], at=now),
+    xively.Datastream(id="temp1", current_value=dataList[6][0], at=now),
+    xively.Datastream(id="humidity1", current_value=dataList[6][1], at=now),
+    xively.Datastream(id="temp2", current_value=dataList[7][0], at=now),
+    xively.Datastream(id="humidity2", current_value=dataList[7][1], at=now),
     xively.Datastream(id="temp3", current_value=dataList[8][0], at=now),
     xively.Datastream(id="humidity3", current_value=dataList[8][1], at=now),
     xively.Datastream(id="temp4", current_value=dataList[9][0], at=now),
@@ -118,8 +162,6 @@ def mainLoop():
   global csv_success
   data = []
   ser = serial.Serial("/dev/tty.usbmodem1421", 9600)
-  for i in range(0,2):
-        ser.readline()
   print "Serial Initialized"
 
   while 1:
