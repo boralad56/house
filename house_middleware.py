@@ -185,7 +185,7 @@ def mainLoop():
         sensorData = val[i].split(':')
         data.append(sensorData)
 
-      data.append(iterations)
+      data.append(str(iterations))
 
       try: 
         writeToCsv(data)
