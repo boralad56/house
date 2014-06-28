@@ -17,12 +17,16 @@ global xively_success
 global csv_success 
 global wuLastUpdate
 global wuData
+global iterations
 
 xively_success = False
 csv_success = False
 
 wuLastUpdate = datetime.datetime.strptime("", "")
 wuData =[]
+
+iterations = 0
+
 
 
 
@@ -136,7 +140,7 @@ def printXively(dataList):
 def writeToCsv(datalist):
   global csv_success
 
-  header = ["date", "time", "weather", "uv", "exterior temp", "exterior humidity", "temp1", "hum2", "temp2", "hum2", "temp3", "hum3", "temp4", "hum4", "temp5", "hum5", "temp6", "hum6", "temp7", "hum7","\n"]
+  header = ["date", "time", "weather", "uv", "exterior temp", "exterior humidity", "temp1", "hum2", "temp2", "hum2", "temp3", "hum3", "temp4", "hum4", "temp5", "hum5", "temp6", "hum6", "temp7", "hum7", "iterations","\n"]
 
   fileName = str(time.strftime("%m_%d_%y_")+ "log.csv")
   if os.path.exists(fileName):
@@ -160,6 +164,8 @@ def writeToCsv(datalist):
 def mainLoop():
   global xively_success
   global csv_success
+  global iterations
+
   data = []
   ser = serial.Serial("/dev/tty.usbmodem1421", 9600)
   print "Serial Initialized"
@@ -179,6 +185,8 @@ def mainLoop():
         sensorData = val[i].split(':')
         data.append(sensorData)
 
+      data.append(iterations)
+
       try: 
         writeToCsv(data)
         csv_success = True
@@ -196,6 +204,7 @@ def mainLoop():
           xively_success = False
 
       print status(xively_success, csv_success), ": ", data 
+      iterations += 1
       data = []
 
 mainLoop()
