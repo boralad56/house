@@ -1,61 +1,45 @@
 # These modules are for system operations 
 # like returning size of variables (size optimizations) or
-# reading from the serial port 
+# scanning the serial receive buffer.
 import os
 import sys 
 import serial 
 import time
 import datetime
+
 # Modules hit WUNDERGROUND API
 # and introduce real-time weather data 
 import urllib2
 import json
+
 # Log data to cloud with Xively 
 import xively
 
+# Global variables => I hate using them, but some functionality was easily implemented using them,
+# so I gave in. 
 global xively_success
 global csv_success 
 global wuLastUpdate
 global wuData
 global iterations
+global geolookup
 
+#Sets the initial sucess booleans to False
 xively_success = False
 csv_success = False
 
 wuLastUpdate = datetime.datetime.strptime("", "")
 wuData =[]
 
+# Initial successful iteration count
 iterations = 0
 
-
-
-
-## This is the first getWunderground() function- doesn't include Wunderground API timer of 
-## 1 time per 30 min
-"""
-def getWunderground():
-  global wuLastUpdate
-  dataFromWunderground = []
-  try:
-    #f = urllib2.urlopen('http://api.wunderground.com/api/a1ab3a70a8e9f35e/geolookup/conditions/q/ME/Orrington.json')
-    json_string = f.read()
-    parsed_json = json.loads(json_string)
-    weather = parsed_json["current_observation"]["weather"]
-    temp_f = parsed_json["current_observation"]["temp_f"]
-    relative_humidity = parsed_json["current_observation"]["relative_humidity"]
-    uv = parsed_json["current_observation"]["UV"]
-    #pressure_in = parsed_json["current_observation"]["pressure_in"]
-    #wind_degrees = parsed_json["current_observation"]["wind_degrees"]
-    #wind_mph = parsed_json["current_observation"]["wind_mph"]
-    f.close()
-    dataFromWunderground = [str(weather), str(uv), str(temp_f), str(relative_humidity[:-1]) ]
-  except:
-    for i in range(0,4):
-      dataFromWunderground.append("No connection")
-  return dataFromWunderground
-"""
-
-def getWunderground():
+def getWunderground(geolookup):
+  """ Geolookup = weather underground geolookup url: (http://www.wunderground.com/weather/api/d/docs?d=data/geolookup),
+  determines if program has hit the API within the last 30 minutes. If yes, returns values of last API call.
+  If no, it tries to call the API and returns a list of the current weather, current temp, rel humidity, and UV index.
+  If there is no connection to the internet/ wunderground API, function returns a list with all values populated with "no connection".
+  """
   dataFromWunderground = []
   global wuLastUpdate
   global wuData
@@ -64,7 +48,7 @@ def getWunderground():
   print timeDelta
   if timeDelta >= datetime.timedelta(minutes=30):
     try:
-      f = urllib2.urlopen('http://api.wunderground.com/api/a1ab3a70a8e9f35e/geolookup/conditions/q/ME/Orrington.json')
+      f = urllib2.urlopen(geolookup)
       json_string = f.read()
       parsed_json = json.loads(json_string)
       weather = parsed_json["current_observation"]["weather"]
@@ -89,11 +73,13 @@ def getWunderground():
 
 
 def getDateTime():
+  """Function grabs current time and date, then returns values in a 2-element list. """
   timeNow = time.strftime("%H:%M:%S")
-  dateToday = time.strftime("%d/%m/%y")
+  dateToday = time.strftime("%m/%d/%y")
   return [dateToday, timeNow]
 
 def status(a, b):
+  """ a = Xively success status. b = CSV success status."""
   if a and b:
         return "Xively and CSV updated"
   elif a:
@@ -103,10 +89,12 @@ def status(a, b):
 
 
 def printXively(dataList):
+  """datalist = list of weather underground data, current date and time, and sensor values. Function 
+  iterates over the list, and writes each element to the proper Xively data stream."""
   global xively_success
 
-  XIVELY_API_KEY = 'IPMdQlqEtGmcy5WxkrzD4KL6jTNqq1mSeVNkebgdOMntYsh3'
-  XIVELY_FEED_ID = 1579988059
+  XIVELY_API_KEY = YOUR_API_KEY_HERE
+  XIVELY_FEED_ID = YOUR_XIVELY_FEED_ID_HERE
   api = xively.XivelyAPIClient(XIVELY_API_KEY)
   feed = api.feeds.get(XIVELY_FEED_ID)
   now = datetime.datetime.now()
@@ -136,8 +124,11 @@ def printXively(dataList):
   xively_success = True
   
 
-
 def writeToCsv(datalist):
+  """ function writes datalist values to a csv file. If daily csv file exists already, 
+  list values are simply appended to end of file. If it does not, function creates the file, 
+  then appends values. 
+  """ 
   global csv_success
 
   header = ["date", "time", "weather", "uv", "exterior temp", "exterior humidity", "temp1", "hum2", "temp2", "hum2", "temp3", "hum3", "temp4", "hum4", "temp5", "hum5", "temp6", "hum6", "temp7", "hum7", "iterations","\n"]
@@ -161,10 +152,19 @@ def writeToCsv(datalist):
   f.close()
   csv_success = True
 
+
 def mainLoop():
+  """mainLoop checks the serial receive buffer for activity. If it sees anything, it grabs 
+  current date/time and weather underground data. It grabs the semi-colon/colon separated values in the 
+  serial buffer, appends them to the array already containing date/time/wunderground data, and tries to 
+  write array to a CSV and Xively. It then increases the iteration count by 1, and puts the program to sleep
+  for 4.5 minutes (to save resources on host computer). The arduino sends data every 5 minutes, so a 4.5 minute
+  sleep cycle is plenty long enough to conserve resouces without mistiming data transfer. """ 
+
   global xively_success
   global csv_success
   global iterations
+  global geolookup
 
   data = []
   ser = serial.Serial("/dev/tty.usbmodem1421", 9600)
@@ -192,7 +192,6 @@ def mainLoop():
         csv_success = True
       except:
         csv_success = False
-
       try:
         printXively(data)
         xively_success = True
@@ -206,5 +205,7 @@ def mainLoop():
       print status(xively_success, csv_success), ": ", data 
       iterations += 1
       data = []
+
+      time.sleep(270)
 
 mainLoop()
